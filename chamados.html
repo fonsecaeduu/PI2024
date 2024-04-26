@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Chamados</title>
+</head>
+<body>
+    <h1>Chamados</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Assunto</th>
+                <th>Mensagem</th>
+                <th>Resposta</th>
+                <th>Finalizado</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="chamadosTableBody">
+        </tbody>
+    </table>
+
+    <script>
+        fetch("https://parseapi.back4app.com/classes/Chamados", {
+            method: "GET",
+            headers: {
+                "X-Parse-Application-Id": "VkHkkzeoXSIprTToHooNPvVi76NUiSmDjVDcVHUi",
+                "X-Parse-REST-API-Key": "PCy1fNQ9qxycWaKFUquaYnV7SfIWCHVstNMzKvlZ"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("chamadosTableBody").innerHTML = "";
+
+            data.results.forEach(chamado => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${chamado.nome}</td>
+                    <td>${chamado.email}</td>
+                    <td>${chamado.assunto}</td>
+                    <td>${chamado.mensagem}</td>
+                    <td>${chamado.resposta || "-"}</td>
+                    <td>${chamado.finalizado ? "Sim" : "Não"}</td>
+                    <td>
+                        <button onclick="responderChamado('${chamado.objectId}')">Responder</button>
+                        <button onclick="marcarConcluido('${chamado.objectId}')">Concluído</button>
+                    </td>
+                `;
+                document.getElementById("chamadosTableBody").appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error("Erro ao carregar chamados:", error);
+            alert("Ocorreu um erro ao carregar os chamados. Por favor, tente novamente mais tarde.");
+        });
+
+        function responderChamado(chamadoId) {
+            var resposta = prompt("Digite a resposta:");
+
+            if (resposta !== null) {
+                fetch(`https://parseapi.back4app.com/classes/Chamados/${chamadoId}`, {
+                    method: "PUT",
+                    headers: {
+                        "X-Parse-Application-Id": "VkHkkzeoXSIprTToHooNPvVi76NUiSmDjVDcVHUi",
+                        "X-Parse-REST-API-Key": "PCy1fNQ9qxycWaKFUquaYnV7SfIWCHVstNMzKvlZ",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ resposta: resposta })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Resposta enviada com sucesso!");
+                        location.reload();
+                    } else {
+                        alert("Ocorreu um erro ao enviar a resposta.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao enviar resposta:", error);
+                    alert("Ocorreu um erro ao enviar a resposta. Por favor, tente novamente mais tarde.");
+                });
+            }
+        }
+
+        function marcarConcluido(chamadoId) {
+            fetch(`https://parseapi.back4app.com/classes/Chamados/${chamadoId}`, {
+                method: "PUT",
+                headers: {
+                    "X-Parse-Application-Id": "VkHkkzeoXSIprTToHooNPvVi76NUiSmDjVDcVHUi",
+                    "X-Parse-REST-API-Key": "PCy1fNQ9qxycWaKFUquaYnV7SfIWCHVstNMzKvlZ",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ finalizado: true })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Chamado marcado como concluído!");
+                    location.reload();
+                } else {
+                    alert("Ocorreu um erro ao marcar como concluído.");
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao marcar como concluído:", error);
+                alert("Ocorreu um erro ao marcar como concluído. Por favor, tente novamente mais tarde.");
+            });
+        }
+    </script>
+</body>
+</html>
